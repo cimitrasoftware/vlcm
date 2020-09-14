@@ -1,0 +1,80 @@
+version: '3.1'
+### Three Docker Container Services: Database (db), Server (cimitra), Web Client (web) ###
+services:
+
+  db:
+    image: mongo
+    
+  ### DATABASE PORT FOR EXTERNAL ACCESS BEGIN ###
+  ### --------------------------------------- ###
+  ### For external access to the MongoDB database ###
+  ### remove the "#" symbol before    ports: (and) - 27017:27017 ###
+  ### Note: The "- 27017:27017" line should keep it's indentation so ### 
+  ### that the dash (-) is right under the "o" in the word "ports" ###
+  
+  
+    #ports:
+     #- 27017:27017
+     
+     
+  ### ------------------------------------- ###
+  ### DATABASE PORT FOR EXTERNAL ACCESS END ###
+  
+  
+    restart: always
+    volumes:
+      - mongodata:/data/db
+
+  cimitra:
+    image: cimitra/server:rc
+    restart: always
+    environment:
+      APPIT_DB_URL: mongodb://db/cimitra_prod
+    depends_on:
+      - db
+
+
+  web:
+    image: cimitra/web:rc
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    environment:
+      CIMITRA_API_URL: http://cimitra:5007
+      
+      
+      ### CUSTOM TITLE SECTION BEGIN ###
+      ### -------------------------- ###
+      
+      CIMITRA_TITLE: Cimitra
+      
+      ### ------------------------ ###      
+      ### CUSTOM TITLE SECTION END ###
+
+      
+    depends_on:
+      - cimitra
+      
+      
+    ### SSL CERTIFICATE & BRANDING SECTION BEGIN ###
+    ### ---------------------------------------- ###
+    ### To user SSL certificate components, remove the "#" symbol before volumes: (and) the certificate and the key ###
+    ### Note: The "- .crt/.key" lines should be indented so that the dash (-) is right under the "o" in the word "volumes" below ###
+    ### Another Note: Only change the cimitra.crt and cimitra.key value on the left of the argument, ###
+    ### do not change the server.crt and the server.key reference ###    
+
+    #volumes:
+      #- ./cimitra.crt:/etc/ssl/certs/server.crt
+      #- ./cimitra.key:/etc/ssl/private/server.key
+      #- ./cimitra_ca.crt:/etc/ssl/certs/server-ca.crt
+      #- ./branding/cimitra.png:/var/www/html/branding/logo_full.png
+      #- ./branding/cimitra.svg:/var/www/html/branding/logo_full.svg
+      #- ./branding/icons/cimitra.png:/var/www/html/branding/icons/logo.png
+      #- ./branding/icons/cimitra.svg:/var/www/html/branding/icons/logo.svg
+
+    ### -------------------------------------- ###
+    ### SSL CERTIFICATE & BRANDING SECTION END ###
+
+volumes:
+  mongodata:
